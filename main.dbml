@@ -1,0 +1,97 @@
+Table plans {
+  id uuid [pk, not null, default: `uuid_generate_v4()`]
+  for_user text [null, note: 'null if the plan is for everyone']
+  name text [not null]
+  base_price_id text [null, note: 'null if no checkout is needed - i.e., the plan is a sponsorship/Free (can have packages, though!)']
+  base_credits bigint [not null, default: 42000000]
+  package_price_id text [null, note: 'null if extra credits packages should not be billed - e.g., unlimited plans']
+  credits_per_package bigint [not null, default: 10000000]
+  max_api_keys int [not null, default: 7]
+
+  indexes {
+    id [pk]
+    for_user
+    base_price_id
+  }
+}
+
+Table updates {
+  id int [pk, not null, increment]
+  title text [not null, note: 'e.g., \'The Kraken Update\'']
+  summary text [not null, note: 'e.g., \'A New and Better Infrastructure\'']
+  description text [not null, note: 'e.g., \'Our service is back up! We\'ve significantly re-designed our infrastructure: we can deploy it to any cloud (not just DigitalOcean), everything is faster, and, more importantly, RPC calls are 20x cheaper (10,000 RPC calls cost just $1). New APIs will extremely easy to add in the future. Traffic has been renamed to credits.\'']
+  learn_more_link text [not null, note: 'e.g., \'https://blog.kuhi.to/release-the-kraken\'']
+
+  indexes {
+    id [pk]
+  }
+}
+
+Table users {
+  id text [pk, not null]
+  failed_gift_code_attempts int [not null, default: 0]
+  last_update_acknowledged int [not null, default: 0, note: 'not a ref because it can be -1, meaning no update acknowledged']
+  current_plan_id uuid [null, ref: > plans.id, note: 'if null, user is on the \'Free - No Card\' plan.']
+  remainign_credits bigint [not null, default: 0, note: 'remaining credits for THIS billing cycle']
+  billing_cycle_end timestampz [not null]
+  stripe_customer_id text [null, note: 'only created if they are subscribed to a plan that has a price id, either base or for packages']
+  auto_purchase_credits_packages boolean [not null, default: false]
+  notification_settings jsonb [not null]
+
+  indexes {
+    id [pk]
+    billing_cycle_end
+  }
+}
+
+Table gift_codes {
+  code uuid [pk, not null, default: `uuid_generate_v4()`]
+  credits bigint [not null]
+  used_at timestampz [null, note: 'null if unused']
+  used_by text [null, ref: > users.id]
+
+  indexes {
+    code [pk]
+    used_at
+  }
+}
+
+Table tickets {
+  id uuid [pk, not null, default: `uuid_generate_v4()`]
+  created_at timestampz [not null, default: `NOW()`]
+  message text [not null]
+  emotional_state text [not null]
+  uid text [null, ref: > users.id]
+  contact text [null]
+  resolved boolean [not null, default: false]
+
+  indexes {
+    id [pk]
+    (resolved, created_at)
+  }
+}
+
+Table api_keys {
+  api_key uuid [pk, not null, default: `uuid_generate_v4()`]
+  disabled boolean [not null, default: false]
+  monthly_credit_limit bigint [not null, default: 0, note: '0 means no limit']
+  name text [not null]
+  origin text [not null]
+  uid text [not null, ref: > users.id]
+
+  indexes {
+    api_key [pk]
+    uid
+  }
+}
+
+Table usage {
+  billing_cycle_end timestampz [not null]
+  api_key uuid [not null]
+  credits bigint [not null, default: 0]
+
+  indexes {
+    (billing_cycle_end, api_key) [pk]
+    api_key
+  }
+}
