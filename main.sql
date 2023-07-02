@@ -4,6 +4,7 @@ CREATE TABLE "plans" (
   "name" text NOT NULL,
   "base_price_id" text,
   "base_credits" bigint NOT NULL DEFAULT 42000000,
+  "extra_packagse_enabled" boolean NOT NULL DEFAULT true,
   "package_price_id" text,
   "credits_per_package" bigint NOT NULL DEFAULT 10000000,
   "max_api_keys" int NOT NULL DEFAULT 7,
@@ -85,6 +86,8 @@ CREATE INDEX ON "usage" ("api_key");
 COMMENT ON COLUMN "plans"."for_user" IS 'null if the plan is for everyone';
 
 COMMENT ON COLUMN "plans"."base_price_id" IS 'null if no checkout is needed - i.e., the plan is a sponsorship/Free (can have packages, though!)';
+
+COMMENT ON COLUMN "plans"."extra_packagse_enabled" IS 'should only be false for the "Free - No Credit Card" plan';
 
 COMMENT ON COLUMN "plans"."package_price_id" IS 'null if extra credits packages should not be billed - e.g., unlimited plans';
 

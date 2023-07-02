@@ -4,6 +4,7 @@ Table plans {
   name text [not null]
   base_price_id text [null, note: 'null if no checkout is needed - i.e., the plan is a sponsorship/Free (can have packages, though!)']
   base_credits bigint [not null, default: 42000000]
+  extra_packagse_enabled boolean [not null, default: true, note: 'should only be false for the \'Free - No Credit Card\' plan']
   package_price_id text [null, note: 'null if extra credits packages should not be billed - e.g., unlimited plans']
   credits_per_package bigint [not null, default: 10000000]
   max_api_keys int [not null, default: 7]
